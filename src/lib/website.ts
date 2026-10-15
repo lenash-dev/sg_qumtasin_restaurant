@@ -3,16 +3,29 @@ import { after } from "next/server";
 
 export type WebsiteTag = "menu" | "promotions";
 
+/** Acepta la URL del endpoint o solo la de la web (se completa con /api/revalidate). */
+function revalidateUrl() {
+  const raw = process.env.WEBSITE_REVALIDATE_URL || process.env.WEBSITE_URL;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw.trim());
+    if (url.pathname === "/" || url.pathname === "") url.pathname = "/api/revalidate";
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Avisa a la página web que el menú o las promociones cambiaron para que
  * actualice su caché al instante. Se ejecuta después de responder
  * (`after`), así no hace esperar al personal.
  *
- * Requiere WEBSITE_REVALIDATE_URL y REVALIDATE_SECRET. Sin ellas, la web
- * igual se actualiza sola en pocos minutos.
+ * Requiere REVALIDATE_SECRET y WEBSITE_REVALIDATE_URL (o WEBSITE_URL). Sin
+ * ellas, la web igual se actualiza sola en un minuto.
  */
 export function revalidateWebsite(tags: WebsiteTag[]) {
-  const url = process.env.WEBSITE_REVALIDATE_URL;
+  const url = revalidateUrl();
   const secret = process.env.REVALIDATE_SECRET;
   if (!url || !secret) return;
 
