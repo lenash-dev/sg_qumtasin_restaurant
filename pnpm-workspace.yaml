@@ -1,0 +1,20 @@
+# Paquetes que pueden ejecutar scripts al instalarse (pnpm los bloquea por defecto).
+# unrs-resolver (usado por ESLint) no lo necesita: trae su binario precompilado.
+allowBuilds:
+  unrs-resolver: false
+# pnpm espera unos días antes de instalar versiones recién publicadas; estas se
+# permiten porque el proyecto se creó con ellas.
+minimumReleaseAgeExclude:
+  - '@next/env@16.4.1'
+  - '@next/eslint-plugin-next@16.4.1'
+  - '@next/swc-darwin-arm64@16.4.1'
+  - '@next/swc-darwin-x64@16.4.1'
+  - '@next/swc-linux-arm64-gnu@16.4.1'
+  - '@next/swc-linux-arm64-musl@16.4.1'
+  - '@next/swc-linux-x64-gnu@16.4.1'
+  - '@next/swc-linux-x64-musl@16.4.1'
+  - '@next/swc-win32-arm64-msvc@16.4.1'
+  - '@next/swc-win32-x64-msvc@16.4.1'
+  - eslint-config-next@16.4.1
+  - lucide-react@1.57.0
+  - next@16.4.1
