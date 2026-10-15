@@ -36,19 +36,19 @@ Lo que no está publicado no aparece en la web: un servicio sin menú publicado 
 1. Crea un proyecto en [supabase.com](https://supabase.com).
 2. En **SQL Editor**, ejecuta el contenido de `supabase/migrations/20261014000001_esquema_inicial.sql` (tablas, permisos y funciones).
 3. Opcional: ejecuta `supabase/seed.sql` para cargar datos de ejemplo (categorías, platos, el almuerzo de hoy, promociones y mesas).
-4. En **Authentication → Sign In / Providers**, desactiva *Allow new users to sign up*: las cuentas las crea el administrador.
+4. ⚠️ En **Authentication → Sign In / Providers**, desactiva *Allow new users to sign up*. Si queda activado, cualquiera podría crearse una cuenta con la clave pública y entrar como personal. Las cuentas las crea el administrador.
 
 > Con la [CLI de Supabase](https://supabase.com/docs/guides/cli) también se puede: `pnpm dlx supabase link` y `pnpm dlx supabase db push`.
 
 ### 2. Crear el primer administrador
 
-1. En **Authentication → Users → Add user**, crea el usuario con correo y contraseña.
-2. En **SQL Editor**, dale el rol de administrador:
+1. En **Authentication → Users → Add user**, crea el usuario con correo y contraseña y marca **Auto Confirm User** (si no, no podrá entrar hasta confirmar el correo).
+2. En **SQL Editor**, dale el rol de administrador. Esta consulta crea el perfil si no existe (por ejemplo, si el usuario se creó antes de ejecutar la migración) o lo actualiza:
 
 ```sql
-update public.profiles
-set role = 'admin', full_name = 'Tu nombre'
-where id = (select id from auth.users where email = 'tu-correo@ejemplo.com');
+insert into public.profiles (id, full_name, role)
+select id, 'Tu nombre', 'admin' from auth.users where email = 'tu-correo@ejemplo.com'
+on conflict (id) do update set role = 'admin', full_name = excluded.full_name;
 ```
 
 Los demás usuarios que crees quedan como **personal** (menú del día, platos, categorías y reservas).
@@ -56,6 +56,19 @@ Los demás usuarios que crees quedan como **personal** (menú del día, platos, 
 ### 3. Variables de entorno
 
 Copia `.env.example` como `.env.local` y completa la URL y la clave pública del proyecto (*Project Settings → API*). `REVALIDATE_SECRET` debe ser el mismo en el sistema y en la web.
+
+- `NEXT_PUBLIC_SUPABASE_URL` es la **URL del proyecto**, `https://<id>.supabase.co`, sin `/rest/v1/` (el código igual la recorta, pero es la forma correcta).
+- `WEBSITE_REVALIDATE_URL` termina en `/api/revalidate` (si pones solo la URL de la web, se completa sola).
+- Después de cambiar `.env.local`, reinicia `pnpm dev`.
+
+### Si no puedes iniciar sesión
+
+| Mensaje | Qué hacer |
+| --- | --- |
+| *Correo o contraseña incorrectos* | Revisa los datos o cambia la contraseña en *Authentication → Users*. |
+| *Tu correo aún no está confirmado* | En *Authentication → Users*, abre el usuario y confírmalo. |
+| *Tu usuario existe pero no tiene acceso* | Ejecuta la consulta del paso 2 con tu correo. |
+| *No se pudo conectar con Supabase* | Revisa la URL y la clave pública en `.env.local` y reinicia `pnpm dev`. |
 
 ### 4. Ejecutar
 
